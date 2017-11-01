@@ -6,30 +6,25 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"errors"
 )
 
 var (
 	port     = flag.String("p", "80", "Onde eu vou escutar")
 	basepath = flag.String("d", "./", "Root folder")
-	// ErrFolderNotFound When the working folder does not exist
-	ErrFolderNotFound = errors.New("A pasta de trabalho não existe")
-	// ErrCantParseURL When server can't parse the URL
-	ErrCantParseURL = errors.New("Não foi possivel parsear a url")
 )
 
 func main() {
 	log := logger.New("main")
 	flag.Parse()
 	if !isPastaExist(*basepath) { // Será que essa pasta existe?
-		log.Error(ErrFolderNotFound)
+		log.ErrorString("A pasta de trabalho não existe")
 		flag.Usage()
 	}
 	bindTo := "0.0.0.0:" + *port
 	log.Info("Iniciando servidor...")
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", server)                                   // Handler do file server
+	mux.HandleFunc("/", server)                                 // Handler do file server
 	log.Info("Meu trabalho acontecerá na pasta: %s", *basepath) // Estou lendo na pasta!!
 	log.Info("Entendido, vamos trabalhar em %s", bindTo)        // Estou bindando!!
 	log.Info("Pau na máquina!")
@@ -45,7 +40,7 @@ func server(w http.ResponseWriter, r *http.Request) {
 	var path = *basepath + r.RequestURI  // Junta endereço da pasta com a url pedida
 	path, err := url.QueryUnescape(path) // Remover urlencode
 	if err != nil {
-		log.Error(ErrCantParseURL)
+		log.ErrorString("Não foi possivel parsear a url")
 		log.Error(err)
 	}
 	log.Debug("[%s] %s %s", r.Host, r.Method, r.URL) // Debug, e tbm por que é mais legal :v
