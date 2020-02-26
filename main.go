@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	logger "github.com/lucas59356/go-logger"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,36 +14,36 @@ var (
 )
 
 func main() {
-	log := logger.New("main")
 	flag.Parse()
 	if !isPastaExist(*basepath) { // Será que essa pasta existe?
-		log.ErrorString("A pasta de trabalho não existe")
+		log.Println("[main] erro: A pasta de trabalho não existe")
 		flag.Usage()
+		os.Exit(1)
 	}
 	bindTo := "0.0.0.0:" + *port
-	log.Info("Iniciando servidor...")
+	log.Println("[main] info: Iniciando servidor...")
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", server)                                 // Handler do file server
-	log.Info("Meu trabalho acontecerá na pasta: %s", *basepath) // Estou lendo na pasta!!
-	log.Info("Entendido, vamos trabalhar em %s", bindTo)        // Estou bindando!!
-	log.Info("Pau na máquina!")
+	mux.HandleFunc("/", server)                                                  // Handler do file server
+	log.Printf("[main] info: Meu trabalho acontecerá na pasta: %s\n", *basepath) // Estou lendo na pasta!!
+	log.Printf("[main] info: Entendido, vamos trabalhar em %s\n", bindTo)        // Estou bindando!!
+	log.Println("[main] info: Pau na máquina!")
 
 	err := http.ListenAndServe(bindTo, mux)
 	if err != nil {
-		log.Error(err)
+		log.Printf("[main] erro: %s", err.Error())
+		os.Exit(1)
 	}
 }
 
 func server(w http.ResponseWriter, r *http.Request) {
-	log := logger.New("srv")
 	var path = *basepath + r.RequestURI  // Junta endereço da pasta com a url pedida
 	path, err := url.QueryUnescape(path) // Remover urlencode
 	if err != nil {
-		log.ErrorString("Não foi possivel parsear a url")
-		log.Error(err)
+		log.Println("[srv] warn: Não foi possivel parsear a url")
+		log.Printf("[srv] error: %s", err.Error())
 	}
-	log.Debug("[%s] %s %s", r.Host, r.Method, r.URL) // Debug, e tbm por que é mais legal :v
+	log.Printf("[srv] info: [%s] %s %s", r.Host, r.Method, r.URL) // Debug, e tbm por que é mais legal :v
 	http.ServeFile(w, r, path)
 	w.Header().Set("Cache-Control", "max-age=5") // Evitar que o cache do navegador bugue a listagem, tirando a necessidade do ^F5
 }
